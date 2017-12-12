@@ -67,10 +67,13 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (e *Exporter) collectMetrics(stats *Stats, ch chan<- prometheus.Metric) {
-	for _, k := range []string{"jvm", "process", "reloads"} {
+	for _, k := range []string{"jvm", "events", "process", "reloads"} {
 		e.collectTree(k, (*stats)[k], prometheus.Labels{}, ch)
 	}
-	e.collectPipeline((*stats)["pipeline"], ch)
+
+	for key, data := range (*stats)["pipelines"].(map[string]interface{}) {
+		e.collectPipeline(key, data, ch)
+	}
 }
 
 func (e *Exporter) collectTree(name string, data interface{}, labels prometheus.Labels, ch chan<- prometheus.Metric) {
@@ -104,21 +107,25 @@ func (e *Exporter) collectTree(name string, data interface{}, labels prometheus.
 	}
 }
 
-func (e *Exporter) collectPipeline(data interface{}, ch chan<- prometheus.Metric) {
+func (e *Exporter) collectPipeline(pipelineName string, data interface{}, ch chan<- prometheus.Metric) {
 	stats, ok := data.(map[string]interface{})
 	if !ok {
 		log.Error("Wrong format of pipeline statistics")
 		return
 	}
+
+	labels := prometheus.Labels{"pipeline": pipelineName}
+
 	for _, k := range []string{"events", "reloads", "queue"} {
-		e.collectTree("pipeline_"+k, stats[k], prometheus.Labels{}, ch)
+		e.collectTree("pipeline_"+k, stats[k], labels, ch)
 	}
+
 	for _, k := range []string{"inputs", "filters", "outputs"} {
-		e.collectPlugins("pipeline_plugins", k, stats["plugins"], ch)
+		e.collectPlugins("pipeline_plugins", k, stats["plugins"], pipelineName, ch)
 	}
 }
 
-func (e *Exporter) collectPlugins(name string, section string, data interface{}, ch chan<- prometheus.Metric) {
+func (e *Exporter) collectPlugins(name string, section string, data interface{}, pipelineName string, ch chan<- prometheus.Metric) {
 	stats := data.(map[string]interface{})
 	plugins := stats[section].([]interface{})
 	for _, p := range plugins {
@@ -126,6 +133,7 @@ func (e *Exporter) collectPlugins(name string, section string, data interface{},
 		labels := prometheus.Labels{
 			"id":   plugin["id"].(string),
 			"name": plugin["name"].(string),
+			"pipeline": pipelineName,
 		}
 		delete(plugin, "id")
 		delete(plugin, "name")
