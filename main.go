@@ -68,11 +68,17 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 func (e *Exporter) collectMetrics(stats *Stats, ch chan<- prometheus.Metric) {
 	for _, k := range []string{"jvm", "events", "process", "reloads"} {
-		e.collectTree(k, (*stats)[k], prometheus.Labels{}, ch)
+		if tree, ok := (*stats)[k]; ok {
+			e.collectTree(k, tree, prometheus.Labels{}, ch)
+		}
 	}
 
-	for key, data := range (*stats)["pipelines"].(map[string]interface{}) {
-		e.collectPipeline(key, data, ch)
+	if pipelines, ok := (*stats)["pipelines"]; ok {
+		for pipelineName, data := range pipelines.(map[string]interface{}) {
+			e.collectPipeline(pipelineName, data, ch)
+		}
+	} else {
+		e.collectPipeline("", (*stats)["pipeline"], ch)
 	}
 }
 
@@ -114,7 +120,10 @@ func (e *Exporter) collectPipeline(pipelineName string, data interface{}, ch cha
 		return
 	}
 
-	labels := prometheus.Labels{"pipeline": pipelineName}
+	labels := prometheus.Labels{}
+	if pipelineName != "" {
+		labels["pipeline"] = pipelineName
+	}
 
 	for _, k := range []string{"events", "reloads", "queue"} {
 		e.collectTree("pipeline_"+k, stats[k], labels, ch)
@@ -133,7 +142,9 @@ func (e *Exporter) collectPlugins(name string, section string, data interface{},
 		labels := prometheus.Labels{
 			"id":   plugin["id"].(string),
 			"name": plugin["name"].(string),
-			"pipeline": pipelineName,
+		}
+		if pipelineName != "" {
+			labels["pipeline"] = pipelineName
 		}
 		delete(plugin, "id")
 		delete(plugin, "name")
