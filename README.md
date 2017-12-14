@@ -14,3 +14,9 @@ Building and running
 To see all available configuration flags:
 
     ./prometheus-logstash-exporter -h
+    
+Packages
+--------
+
+Packages for Debian Stretch and Ubuntu Xenial are available on
+[PackageCloud](https://packagecloud.io/alxrem/prometheus-logstash-exporter/).
