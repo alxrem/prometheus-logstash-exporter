@@ -1,0 +1,36 @@
+variables:
+  DOCKER_DRIVER: overlay
+  REPO_NAME: registry.gitlab.com/alxrem/prometheus-logstash-exporter
+
+build_test_image:
+  variables:
+    TAG: $CI_COMMIT_REF_SLUG
+  image: docker:latest
+  services:
+  - docker:dind
+  stage: build
+  only:
+  - branches
+  except:
+  - master
+  when: manual
+  script:
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  - docker build -t $REPO_NAME:$TAG .
+  - docker push $REPO_NAME:$TAG
+
+build_release_image:
+  variables:
+    TAG: $CI_COMMIT_TAG
+  image: docker:latest
+  services:
+  - docker:dind
+  stage: build
+  only:
+  - tags
+  script:
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  - docker build -t $REPO_NAME:$TAG .
+  - docker tag $REPO_NAME:$TAG $REPO_NAME:latest
+  - docker push $REPO_NAME:$TAG
+  - docker push $REPO_NAME:latest
