@@ -1,0 +1,11 @@
+version: "3"
+services:
+  logstash:
+    image: docker.elastic.co/logstash/logstash-oss:6.1.1
+    ports:
+    - "9600:9600"
+  exporter:
+    build: .
+    ports:
+    - "9304:9304"
+    command: ["-logstash.host", "logstash"]
