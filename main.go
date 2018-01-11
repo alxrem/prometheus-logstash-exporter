@@ -207,6 +207,7 @@ func main() {
 	prometheus.MustRegister(exporter)
 
 	http.Handle(*metricsPath, promhttp.Handler())
+	http.HandleFunc("/-/ping", func(w http.ResponseWriter, r *http.Request) {})
 
 	log.Infoln("Listening on", *listenAddress)
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
