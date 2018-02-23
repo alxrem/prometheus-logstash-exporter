@@ -23,6 +23,7 @@ import (
 	"github.com/prometheus/common/log"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -34,21 +35,29 @@ type Exporter struct {
 	nodeStatsUri string
 	timeout      time.Duration
 	up           prometheus.Gauge
+	labels       prometheus.Labels
 }
 
 type Stats map[string]interface{}
 
 func NewExporter(host string, timeout time.Duration) *Exporter {
+	replacer := strings.NewReplacer(
+		":", "_",
+		".", "_",
+		)
 	return &Exporter{
 		nodeStatsUri: fmt.Sprintf("http://%s/_node/stats", host),
 		timeout:      timeout,
 		up: prometheus.NewGauge(
 			prometheus.GaugeOpts{
-				Namespace: namespace,
+				Namespace: fmt.Sprintf("%s_%s", namespace, replacer.Replace(host)),
 				Name:      "up",
 				Help:      "Was the last scrape of logstash successful",
 			},
 		),
+		labels: prometheus.Labels{
+			"instance": host,
+		},
 	}
 }
 
@@ -69,7 +78,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 func (e *Exporter) collectMetrics(stats *Stats, ch chan<- prometheus.Metric) {
 	for _, k := range []string{"jvm", "events", "process", "reloads"} {
 		if tree, ok := (*stats)[k]; ok {
-			e.collectTree(k, tree, prometheus.Labels{}, ch)
+			e.collectTree(k, tree, e.labels, ch)
 		}
 	}
 
@@ -120,7 +129,7 @@ func (e *Exporter) collectPipeline(pipelineName string, data interface{}, ch cha
 		return
 	}
 
-	labels := prometheus.Labels{}
+	labels := e.labels
 	if pipelineName != "" {
 		labels["pipeline"] = pipelineName
 	}
@@ -193,19 +202,31 @@ func (e *Exporter) fetch(uri string) ([]byte, error) {
 	return body, nil
 }
 
+type addresses []string
+
+func (i *addresses) String() string {
+	return strings.Join(*i, ", ")
+}
+
+func (i *addresses) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 func main() {
+	var logstashAddresses addresses
+	flag.Var(&logstashAddresses, "logstash.host", "Host address of logstash server. Multiple times for multi-instances.")
 	var (
-		listenAddress = flag.String("web.listen-address", ":9304", "Address to listen on for web interface and telemetry.")
-		metricsPath   = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
-		logstashHost  = flag.String("logstash.host", "localhost", "Host address of logstash server.")
-		logstashPort  = flag.Int("logstash.port", 9600, "Port of logstash server.")
-		timeout       = flag.Duration("logstash.timeout", 5*time.Second, "Timeout to get stats from logstash server.")
+		listenAddress    = flag.String("web.listen-address", ":9304", "Address to listen on for web interface and telemetry.")
+		metricsPath      = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
+		timeout          = flag.Duration("logstash.timeout", 5*time.Second, "Timeout to get stats from logstash server.")
 	)
 	flag.Parse()
 
-	exporter := NewExporter(fmt.Sprintf("%s:%d", *logstashHost, *logstashPort), *timeout)
-	prometheus.MustRegister(exporter)
-
+	for _, uri := range logstashAddresses {
+		exporter := NewExporter(uri, *timeout)
+		prometheus.MustRegister(exporter)
+	}
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/-/ping", func(w http.ResponseWriter, r *http.Request) {})
 
