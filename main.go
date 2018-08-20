@@ -108,7 +108,39 @@ func (e *Exporter) collectTree(name string, data interface{}, labels prometheus.
 
 	if v, ok := data.(map[string]interface{}); ok {
 		for k, d := range v {
-			e.collectTree(name+"_"+k, d, labels, ch)
+			if k == "patterns_per_field" {
+				e.collectFields(name+"_"+k, d, labels, ch)
+			} else {
+				e.collectTree(name+"_"+k, d, labels, ch)
+			}
+		}
+	}
+}
+
+func (e *Exporter) collectFields(name string, data interface{}, labels prometheus.Labels, ch chan<- prometheus.Metric) {
+	fields, ok := data.(map[string]interface{})
+	if  !ok || len(fields) == 0 {
+		return
+	}
+
+	labelNames := make([]string, 0)
+	for k := range labels {
+		labelNames = append(labelNames, k)
+	}
+	labelsCopy := prometheus.Labels{}
+	for k, v := range labels {
+		labelsCopy[k] = v
+	}
+
+	for field, v := range fields {
+		if v, ok := v.(float64); ok {
+			vec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name: name,
+			}, append(labelNames, "field"))
+			labelsCopy["field"] = field
+			vec.With(labelsCopy).Set(v)
+			vec.Collect(ch)
 		}
 	}
 }
