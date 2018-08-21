@@ -5,10 +5,16 @@ services:
     ports:
     - "9600:9600"
     volumes:
-    - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-    - ./events.json:/events.json
+    - ./docker-compose/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    - ./docker-compose/events.json:/events.json
   exporter:
     build: .
     ports:
     - "9304:9304"
     command: ["-logstash.host", "logstash"]
+  prometheus:
+    image: prom/prometheus
+    ports:
+    - "9090:9090"
+    volumes:
+    - ./docker-compose/prometheus.yml:/etc/prometheus/prometheus.yml
