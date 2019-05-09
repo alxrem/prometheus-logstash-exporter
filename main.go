@@ -18,12 +18,14 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
-	"io/ioutil"
-	"net/http"
-	"time"
 )
 
 const (
@@ -82,6 +84,25 @@ func (e *Exporter) collectMetrics(stats *Stats, ch chan<- prometheus.Metric) {
 	}
 }
 
+func (e *Exporter) collectSpecificField(name string, data interface{}, labels prometheus.Labels, ch chan<- prometheus.Metric) error {
+	if data == nil {
+		return nil
+	}
+
+	if strings.HasSuffix(name, "_timestamp") {
+		if v, ok := data.(string); ok {
+			t, err := time.Parse(time.RFC3339Nano, v)
+			if err != nil {
+				return err
+			}
+			e.collectTree(name, float64(t.Unix()), labels, ch)
+			return nil
+		}
+	}
+
+	return nil
+}
+
 func (e *Exporter) collectTree(name string, data interface{}, labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	if v, ok := data.(float64); ok {
 		if len(labels) == 0 {
@@ -115,11 +136,15 @@ func (e *Exporter) collectTree(name string, data interface{}, labels prometheus.
 			}
 		}
 	}
+
+	if err := e.collectSpecificField(name, data, labels, ch); err != nil {
+		fmt.Errorf("Parsing of specific metric failed. Metric name: %s. Error: ", name, err)
+	}
 }
 
 func (e *Exporter) collectFields(name string, data interface{}, labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	fields, ok := data.(map[string]interface{})
-	if  !ok || len(fields) == 0 {
+	if !ok || len(fields) == 0 {
 		return
 	}
 
@@ -136,7 +161,7 @@ func (e *Exporter) collectFields(name string, data interface{}, labels prometheu
 		if v, ok := v.(float64); ok {
 			vec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Namespace: namespace,
-				Name: name,
+				Name:      name,
 			}, append(labelNames, "field"))
 			labelsCopy["field"] = field
 			vec.With(labelsCopy).Set(v)
