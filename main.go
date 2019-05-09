@@ -18,14 +18,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/log"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/log"
 )
 
 const (
@@ -138,7 +137,7 @@ func (e *Exporter) collectTree(name string, data interface{}, labels prometheus.
 	}
 
 	if err := e.collectSpecificField(name, data, labels, ch); err != nil {
-		fmt.Errorf("Parsing of specific metric failed. Metric name: %s. Error: ", name, err)
+		log.Warnf("Parsing of specific metric failed. Metric name: %s. Error: ", name, err)
 	}
 }
 
@@ -161,7 +160,7 @@ func (e *Exporter) collectFields(name string, data interface{}, labels prometheu
 		if v, ok := v.(float64); ok {
 			vec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Namespace: namespace,
-				Name:      name,
+				Name: name,
 			}, append(labelNames, "field"))
 			labelsCopy["field"] = field
 			vec.With(labelsCopy).Set(v)
