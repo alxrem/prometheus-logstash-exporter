@@ -223,7 +223,11 @@ func (e *Exporter) fetch(uri string) ([]byte, error) {
 		e.up.Set(0)
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Errorln(err)
+		}
+	}()
 
 	e.up.Set(1)
 
