@@ -7,6 +7,7 @@ services:
     volumes:
     - ./docker-compose/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     - ./docker-compose/events.json:/events.json
+    command: ["-r"]
   exporter:
     build: .
     ports:
