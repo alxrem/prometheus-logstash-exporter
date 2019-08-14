@@ -83,7 +83,7 @@ func (e *Exporter) collectMetrics(stats *Stats, ch chan<- prometheus.Metric) {
 }
 
 func (e *Exporter) collectTree(name string, data interface{}, labels prometheus.Labels, ch chan<- prometheus.Metric) {
-	if v, ok := data.(float64); ok {
+	if v, ok := parseData(data); ok {
 		if len(labels) == 0 {
 			metric := prometheus.NewGauge(prometheus.GaugeOpts{
 				Namespace: namespace,
@@ -182,6 +182,20 @@ func (e *Exporter) collectPlugins(name string, section string, data interface{},
 		delete(plugin, "name")
 		e.collectTree(name+"_"+section, plugin, labels, ch)
 	}
+}
+
+func parseData(data interface{}) (float64, bool) {
+	if value, ok := data.(float64); ok {
+		return value, ok
+	}
+
+	if v, ok := data.(string); ok {
+		if timestamp, err := time.Parse(time.RFC3339, v); err == nil {
+			return float64(timestamp.Unix()), true
+		}
+	}
+
+	return 0, false
 }
 
 func (e *Exporter) fetchStats() (*Stats, error) {
