@@ -1,0 +1,10 @@
+#!/bin/sh
+
+apt-get -qq update
+apt-get -qq --no-install-recommends install devscripts equivs
+
+mk-build-deps -irBt "apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -qq -y"
+dpkg-buildpackage -uc -us
+rm -rf .result && mkdir -p .result
+find ../ -maxdepth 1 -type f -exec mv '{}' .result/ ';'
+find .result/

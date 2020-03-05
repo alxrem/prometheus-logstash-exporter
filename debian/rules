@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+export DH_GOPKG := gitlab.com/alxrem/prometheus-logstash-exporter
+export DH_GOLANG_EXCLUDES := vendor
+
+%:
+	dh $@ --buildsystem=golang --with=golang,systemd
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	dh_auto_install -- --no-source

@@ -1,0 +1,12 @@
+[Unit]
+Description=Prometheus exporter for Logstash
+Documentation=https://prometheus.io/docs/introduction/overview/
+
+[Service]
+Restart=always
+User=prometheus
+EnvironmentFile=/etc/default/prometheus-logstash-exporter
+ExecStart=/usr/bin/prometheus-logstash-exporter $ARGS
+
+[Install]
+WantedBy=multi-user.target

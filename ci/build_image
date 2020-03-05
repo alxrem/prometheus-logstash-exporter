@@ -1,0 +1,18 @@
+#!/bin/sh
+
+TAG=${CI_COMMIT_TAG:-$CI_COMMIT_REF_SLUG}
+docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+docker build -t $CI_REGISTRY_IMAGE:$TAG .
+docker push $REPO_NAME:$TAG
+
+if [ -n "$CI_COMMIT_TAG" ]; then
+  docker tag $CI_REGISTRY_IMAGE:$TAG $CI_REGISTRY_IMAGE:latest
+  docker push $CI_REGISTRY_IMAGE:latest
+
+  docker login -u $DOCKERHUB_USER -p $DOCKERHUB_TOKEN
+  docker tag $CI_REGISTRY_IMAGE:$TAG alxrem/prometheus-logstash-exporter:$TAG
+  docker push alxrem/prometheus-logstash-exporter:$TAG
+
+  docker tag $CI_REGISTRY_IMAGE:$TAG alxrem/prometheus-logstash-exporter:latest
+  docker push alxrem/prometheus-logstash-exporter:latest
+fi

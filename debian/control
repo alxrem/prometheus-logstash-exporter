@@ -1,0 +1,15 @@
+Source: prometheus-logstash-exporter
+Maintainer: Alexey Remizov <alexey@remizov.org>
+Section: utils
+Priority: optional
+Build-Depends: debhelper (>= 9), dh-systemd, dh-golang, golang (>= 2:1.6)
+Standards-Version: 3.9.4
+
+Package: prometheus-logstash-exporter
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: logstash
+Description: Prometheus exporter for Logstash metrics
+ Prometheus exporter for metrics provided by Node Stats API of Logstash.
+
+

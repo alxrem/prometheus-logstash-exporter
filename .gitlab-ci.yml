@@ -1,36 +1,134 @@
-variables:
-  DOCKER_DRIVER: overlay
-  REPO_NAME: registry.gitlab.com/alxrem/prometheus-logstash-exporter
+stages:
+  - validate
+  - build
+  - upload
+  - announce
 
-build_test_image:
-  variables:
-    TAG: $CI_COMMIT_REF_SLUG
-  image: docker:latest
-  services:
-  - docker:dind
-  stage: build
+.release:
   only:
-  - branches
+    - tags
   except:
-  - master
-  when: manual
-  script:
-  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
-  - docker build -t $REPO_NAME:$TAG .
-  - docker push $REPO_NAME:$TAG
+    - master
 
-build_release_image:
-  variables:
-    TAG: $CI_COMMIT_TAG
+.build_package:
+  stage: build
+  extends:
+    - .release
+  script:
+    - ci/build_package
+  artifacts:
+    paths:
+      - .result/
+    expire_in: 30m
+
+.upload_package:
+  stage: upload
+  extends:
+    - .release
+  image: registry.gitlab.com/alxrem/package_cloud
+  script:
+    - ci/upload_package
+
+validate:
+  stage: validate
+  image: alpine
+  extends:
+    - .release
+  script:
+    - apk -U add git
+    - ci/validate_version
+
+build:image:
+  stage: build
   image: docker:latest
   services:
-  - docker:dind
-  stage: build
-  only:
-  - tags
+    - docker:19.03.5-dind
+  except:
+    - master
   script:
-  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
-  - docker build -t $REPO_NAME:$TAG .
-  - docker tag $REPO_NAME:$TAG $REPO_NAME:latest
-  - docker push $REPO_NAME:$TAG
-  - docker push $REPO_NAME:latest
+    - ci/build_image
+
+build:stretch:
+  extends:
+    - .build_package
+  image: debian:stretch
+
+upload:stretch:
+  variables:
+    DIST: debian/stretch
+  extends:
+    - .upload_package
+  needs:
+    - build:stretch
+
+build:buster:
+  extends:
+    - .build_package
+  image: debian:buster
+
+upload:buster:
+  variables:
+    DIST: debian/buster
+  extends:
+    - .upload_package
+  needs:
+    - build:buster
+
+build:xenial:
+  extends:
+    - .build_package
+  image: ubuntu:xenial
+
+upload:xenial:
+  variables:
+    DIST: ubuntu/xenial
+  extends:
+    - .upload_package
+  needs:
+    - build:xenial
+
+build:bionic:
+  extends:
+    - .build_package
+  image: ubuntu:bionic
+
+upload:bionic:
+  variables:
+    DIST: ubuntu/bionic
+  extends:
+    - .upload_package
+  needs:
+    - build:bionic
+
+build:binaries:
+  stage: build
+  extends:
+    - .release
+  image: golang:alpine
+  script:
+    - apk add -U binutils
+    - ci/build_binaries
+  artifacts:
+    paths:
+      - binaries/
+    expire_in: 30m
+
+announce:
+  stage: announce
+  extends:
+    - .release
+  image: python:3-alpine
+  needs:
+    - build:binaries
+    - job: upload:stretch
+      artifacts: false
+    - job: upload:buster
+      artifacts: false
+    - job: upload:xenial
+      artifacts: false
+    - job: upload:bionic
+      artifacts: false
+  script:
+    - pip install requests
+    - apk -U add git
+    - ci/gitlab_release

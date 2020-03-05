@@ -1,0 +1,20 @@
+ARGS=""
+
+# Usage of ./prometheus-logstash-exporter:
+#   -log.format value
+#         Set the log target and format.
+#         Example: "logger:syslog?appname=bob&local=7"
+#                  or "logger:stdout?json=true" (default "logger:stderr")
+#   -log.level value
+#         Only log messages with the given severity or above.
+#         Valid levels: [debug, info, warn, error, fatal]
+#   -logstash.host string
+#         Host address of logstash server. (default "localhost")
+#   -logstash.port int
+#         Port of logstash server. (default 9600)
+#   -logstash.timeout duration
+#         Timeout to get stats from logstash server. (default 5s)
+#   -web.listen-address string
+#         Address to listen on for web interface and telemetry. (default ":9304")
+#   -web.telemetry-path string
+#         Path under which to expose metrics. (default "/metrics")

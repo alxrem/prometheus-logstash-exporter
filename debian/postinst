@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+    configure|reconfigure)
+        # Add prometheus user
+        if ! getent passwd prometheus > /dev/null; then
+            adduser --quiet --system --no-create-home \
+                --group --gecos "Prometheus daemon" prometheus || true
+        fi
+
+        mkdir -p /var/log/prometheus
+        chown -R prometheus:prometheus /var/log/prometheus || true
+
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        :
+        ;;
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

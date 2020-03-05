@@ -1,0 +1,32 @@
+prometheus-logstash-exporter (0.6.1) unstable; urgency=medium
+
+  * Technical release to tag updated CI scripts.
+
+ -- Alexey Remizov <ar@wallarm.com>  Thu, 10 Mar 2020 01:23:50 +0300
+
+prometheus-logstash-exporter (0.5.0) unstable; urgency=medium
+
+  * Parse values of type timestamp
+    Thanks to Michael DOUBEZ
+
+ -- Alexey Remizov <ar@wallarm.com>  Thu, 15 Aug 2019 00:57:47 +0300
+
+prometheus-logstash-exporter (0.4.0) unstable; urgency=medium
+
+  * Fixed processing of `filters.patterns_per_field` section
+    Thanks to Casey Weed <casey@caseyweed.com>
+
+ -- Alexey Remizov <ar@wallarm.com>  Mon, 20 Aug 2018 23:11:00 +0300
+
+prometheus-logstash-exporter (0.2.0) unstable; urgency=medium
+
+  * Added support of Logstash 6.x.
+    Thanks to Guo Xiang Tan <tgx_world+github@hotmail.com>
+
+ -- Alexey Remizov <alexey@remizov.org>  Thu, 14 Dec 2017 02:29:59 +0300
+
+prometheus-logstash-exporter (0.1.0) unstable; urgency=low
+
+  * Initial release.
+
+ -- Alexey Remizov <alexey@remizov.org>  Tue, 12 Sep 2017 00:49:07 +0300
