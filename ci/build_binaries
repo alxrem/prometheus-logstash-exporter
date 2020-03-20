@@ -1,13 +1,9 @@
 #!/bin/sh
 
-BUILDDIR=/go/src/gitlab.com/$CI_PROJECT_PATH
 DEST=`pwd`/binaries
 GOARCH=amd64
 
 mkdir -p ${DEST}/
-mkdir -p `dirname $BUILDDIR`
-ln -s `pwd` $BUILDDIR
-cd $BUILDDIR
 
 for GOOS in windows linux darwin; do
   BINARY="${DEST}/${CI_PROJECT_NAME}-${CI_COMMIT_TAG}-${GOOS}-${GOARCH}"
