@@ -18,12 +18,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/log"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/log"
 )
 
 const (
@@ -119,7 +120,7 @@ func (e *Exporter) collectTree(name string, data interface{}, labels prometheus.
 
 func (e *Exporter) collectFields(name string, data interface{}, labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	fields, ok := data.(map[string]interface{})
-	if  !ok || len(fields) == 0 {
+	if !ok || len(fields) == 0 {
 		return
 	}
 
@@ -136,7 +137,7 @@ func (e *Exporter) collectFields(name string, data interface{}, labels prometheu
 		if v, ok := v.(float64); ok {
 			vec := prometheus.NewUntypedVec(prometheus.UntypedOpts{
 				Namespace: namespace,
-				Name: name,
+				Name:      name,
 			}, append(labelNames, "field"))
 			labelsCopy["field"] = field
 			vec.With(labelsCopy).Set(v)
@@ -171,15 +172,19 @@ func (e *Exporter) collectPlugins(name string, section string, data interface{},
 	plugins := stats[section].([]interface{})
 	for _, p := range plugins {
 		plugin := p.(map[string]interface{})
-		labels := prometheus.Labels{
-			"id":   plugin["id"].(string),
-			"name": plugin["name"].(string),
+		labels := prometheus.Labels{}
+
+		if id, exists := plugin["id"]; exists {
+			labels["id"] = id.(string)
+			delete(plugin, "id")
+		}
+		if name, exists := plugin["name"]; exists {
+			labels["name"] = name.(string)
+			delete(plugin, "name")
 		}
 		if pipelineName != "" {
 			labels["pipeline"] = pipelineName
 		}
-		delete(plugin, "id")
-		delete(plugin, "name")
 		e.collectTree(name+"_"+section, plugin, labels, ch)
 	}
 }
