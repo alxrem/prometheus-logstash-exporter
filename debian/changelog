@@ -1,13 +1,21 @@
+prometheus-logstash-exporter (0.6.2) unstable; urgency=medium
+
+  * Fixed panic on unavailable field.
+    Thanks to Alexandre NICOLAIE (https://github.com/xunleii)
+  * Debian packages are now based on the binaries built externally.
+
+ -- Alexey Remizov <alexey@remizov.org>  Thu, 20 Mar 2020 23:44:25 +0300
+
 prometheus-logstash-exporter (0.6.1) unstable; urgency=medium
 
   * Technical release to tag updated CI scripts.
 
- -- Alexey Remizov <ar@wallarm.com>  Thu, 10 Mar 2020 01:23:50 +0300
+ -- Alexey Remizov <alexey@remizov.org>  Thu, 10 Mar 2020 01:23:50 +0300
 
 prometheus-logstash-exporter (0.5.0) unstable; urgency=medium
 
   * Parse values of type timestamp
-    Thanks to Michael DOUBEZ
+    Thanks to Michael DOUBEZ (https://github.com/michael-doubez)
 
  -- Alexey Remizov <ar@wallarm.com>  Thu, 15 Aug 2019 00:57:47 +0300
 

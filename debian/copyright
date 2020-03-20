@@ -4,7 +4,7 @@ Upstream-Contact: Alexey Remizov <alexey@remizov.org>
 Source: https://gitlab.com/alxrem/prometheus-logstash-exporter
 
 Files: *
-Copyright: 2017 Alexey Remizov
+Copyright: 2017-2020 Alexey Remizov
 License: Apache-2.0
 
 License: Apache-2.0
