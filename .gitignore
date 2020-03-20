@@ -1,3 +1,4 @@
 prometheus-logstash-exporter
 /.idea/
 /venv/
+/vendor/
