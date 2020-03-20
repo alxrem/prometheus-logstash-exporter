@@ -1,12 +1,8 @@
 #!/usr/bin/make -f
 
-export DH_GOPKG := gitlab.com/alxrem/prometheus-logstash-exporter
-export DH_GOLANG_EXCLUDES := vendor
-
 %:
-	dh $@ --buildsystem=golang --with=golang,systemd
-
-override_dh_auto_test:
+	dh $@ --with=systemd
 
 override_dh_auto_install:
-	dh_auto_install -- --no-source
+	mkdir -p debian/prometheus-logstash-exporter/usr/bin/
+	install -m 0755 binaries/prometheus-logstash-exporter-*-linux-amd64 debian/prometheus-logstash-exporter/usr/bin/prometheus-logstash-exporter

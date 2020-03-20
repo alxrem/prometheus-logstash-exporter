@@ -1,6 +1,7 @@
 stages:
   - validate
-  - build
+  - binaries
+  - packages
   - upload
   - announce
 
@@ -11,11 +12,13 @@ stages:
     - master
 
 .build_package:
-  stage: build
+  stage: packages
   extends:
     - .release
   script:
     - ci/build_package
+  needs:
+    - build:binaries
   artifacts:
     paths:
       - .result/
@@ -39,7 +42,7 @@ validate:
     - ci/validate_version
 
 build:image:
-  stage: build
+  stage: packages
   image: docker:latest
   services:
     - docker:19.03.5-dind
@@ -47,6 +50,19 @@ build:image:
     - master
   script:
     - ci/build_image
+
+build:binaries:
+  stage: binaries
+  extends:
+    - .release
+  image: golang:1.13-alpine
+  script:
+    - apk add -U binutils
+    - ci/build_binaries
+  artifacts:
+    paths:
+      - binaries/
+    expire_in: 30m
 
 build:stretch:
   extends:
@@ -99,19 +115,6 @@ upload:bionic:
     - .upload_package
   needs:
     - build:bionic
-
-build:binaries:
-  stage: build
-  extends:
-    - .release
-  image: golang:1.13-alpine
-  script:
-    - apk add -U binutils
-    - ci/build_binaries
-  artifacts:
-    paths:
-      - binaries/
-    expire_in: 30m
 
 announce:
   stage: announce
