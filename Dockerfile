@@ -1,11 +1,10 @@
-FROM golang:alpine AS builder
-WORKDIR /go/src/gitlab.com/alxrem/prometheus-logstash-exporter
-COPY vendor/ ./vendor/
-COPY main.go ./
-RUN apk -U add binutils && go build && strip prometheus-logstash-exporter
+FROM golang:1.13-alpine AS builder
+WORKDIR /src/
+COPY go.mod go.sum main.go ./
+RUN apk -U add binutils && CGO_ENABLED=0 go build -o prometheus-logstash-exporter && strip prometheus-logstash-exporter
 
 FROM alpine
 WORKDIR /
-COPY --from=builder /go/src/gitlab.com/alxrem/prometheus-logstash-exporter/prometheus-logstash-exporter /
+COPY --from=builder /src/prometheus-logstash-exporter /
 EXPOSE 9304
 ENTRYPOINT ["/prometheus-logstash-exporter"]
