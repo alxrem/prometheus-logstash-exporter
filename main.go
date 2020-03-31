@@ -172,7 +172,7 @@ func (e *Exporter) collectPlugins(name string, section string, data interface{},
 	plugins := stats[section].([]interface{})
 	for _, p := range plugins {
 		plugin := p.(map[string]interface{})
-		labels := prometheus.Labels{}
+		labels := prometheus.Labels{"id": "", "name": ""}
 
 		if id, exists := plugin["id"]; exists {
 			labels["id"] = id.(string)
