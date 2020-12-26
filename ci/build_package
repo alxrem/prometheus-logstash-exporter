@@ -3,6 +3,7 @@
 apt-get -qq update
 apt-get -qq --no-install-recommends install devscripts equivs
 
+rm -f Makefile
 mk-build-deps -irBt "apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -qq -y"
 dpkg-buildpackage -uc -us
 rm -rf .result && mkdir -p .result
