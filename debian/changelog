@@ -1,3 +1,12 @@
+prometheus-logstash-exporter (0.7.0) unstable; urgency=medium
+
+    * Added metrics of dead letter queue
+      Thanks to @v8v5v
+    * Fixed issue with removed values
+      Thanks to Alexandre NICOLAIE (https://github.com/xunleii)
+
+ -- Alexey Remizov <alexey@remizov.org>  Sat, 26 Dec 2020 23:41:20 +0300
+
 prometheus-logstash-exporter (0.6.2) unstable; urgency=medium
 
   * Fixed panic on unavailable field.
