@@ -86,7 +86,7 @@ func (e *Exporter) collectMetrics(stats *Stats, ch chan<- prometheus.Metric) {
 func (e *Exporter) collectTree(name string, data interface{}, labels prometheus.Labels, ch chan<- prometheus.Metric) {
 	if v, ok := parseData(data); ok {
 		if len(labels) == 0 {
-			metric := prometheus.NewUntyped(prometheus.UntypedOpts{
+			metric := prometheus.NewGauge(prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      name,
 			})
@@ -97,7 +97,7 @@ func (e *Exporter) collectTree(name string, data interface{}, labels prometheus.
 			for k := range labels {
 				labelNames = append(labelNames, k)
 			}
-			vec := prometheus.NewUntypedVec(prometheus.UntypedOpts{
+			vec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      name,
 			}, labelNames)
@@ -135,7 +135,7 @@ func (e *Exporter) collectFields(name string, data interface{}, labels prometheu
 
 	for field, v := range fields {
 		if v, ok := v.(float64); ok {
-			vec := prometheus.NewUntypedVec(prometheus.UntypedOpts{
+			vec := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      name,
 			}, append(labelNames, "field"))
