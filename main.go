@@ -21,6 +21,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -260,6 +263,23 @@ func main() {
 
 	exporter := NewExporter(fmt.Sprintf("%s:%d", *logstashHost, *logstashPort), *timeout)
 	prometheus.MustRegister(exporter)
+
+	go func() {
+		intChan := make(chan os.Signal)
+		termChan := make(chan os.Signal)
+
+		signal.Notify(intChan, syscall.SIGINT)
+		signal.Notify(termChan, syscall.SIGTERM)
+
+		select {
+		case <-intChan:
+			log.Infoln("Received SIGINT, exiting")
+			os.Exit(0)
+		case <-termChan:
+			log.Infoln("Received SIGTERM, exiting")
+			os.Exit(0)
+		}
+	}()
 
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/-/ping", func(w http.ResponseWriter, r *http.Request) {})
