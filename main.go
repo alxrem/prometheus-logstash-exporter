@@ -24,10 +24,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"log"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/log"
 )
 
 const (
@@ -63,7 +63,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	stats, err := e.fetchStats()
 	if err != nil {
-		log.Errorln(err)
+		log.Println("ERROR:", err)
 	} else {
 		e.collectMetrics(stats, ch)
 	}
@@ -152,7 +152,7 @@ func (e *Exporter) collectFields(name string, data interface{}, labels prometheu
 func (e *Exporter) collectPipeline(pipelineName string, data interface{}, ch chan<- prometheus.Metric) {
 	stats, ok := data.(map[string]interface{})
 	if !ok {
-		log.Error("Wrong format of pipeline statistics")
+		log.Printf("ERROR: Wrong format of pipeline statistics")
 		return
 	}
 
@@ -233,7 +233,7 @@ func (e *Exporter) fetch(uri string) ([]byte, error) {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Errorln(err)
+			log.Println("ERROR:", err)
 		}
 	}()
 
@@ -273,10 +273,10 @@ func main() {
 
 		select {
 		case <-intChan:
-			log.Infoln("Received SIGINT, exiting")
+			log.Println("INFO: Received SIGINT, exiting")
 			os.Exit(0)
 		case <-termChan:
-			log.Infoln("Received SIGTERM, exiting")
+			log.Println("INFO: Received SIGTERM, exiting")
 			os.Exit(0)
 		}
 	}()
@@ -284,6 +284,6 @@ func main() {
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/-/ping", func(w http.ResponseWriter, r *http.Request) {})
 
-	log.Infoln("Listening on", *listenAddress)
-	log.Fatal(http.ListenAndServe(*listenAddress, nil))
+	log.Println("INFO: Listening on", *listenAddress)
+	log.Println("FATAL:", http.ListenAndServe(*listenAddress, nil))
 }
