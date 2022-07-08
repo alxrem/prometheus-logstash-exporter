@@ -152,7 +152,7 @@ func (e *Exporter) collectFields(name string, data interface{}, labels prometheu
 func (e *Exporter) collectPipeline(pipelineName string, data interface{}, ch chan<- prometheus.Metric) {
 	stats, ok := data.(map[string]interface{})
 	if !ok {
-		log.Printf("ERROR: Wrong format of pipeline statistics")
+		log.Println("ERROR: Wrong format of pipeline statistics")
 		return
 	}
 
@@ -251,6 +251,12 @@ func (e *Exporter) fetch(uri string) ([]byte, error) {
 	return body, nil
 }
 
+func servePong(w http.ResponseWriter, r *http.Request) {
+	// return text for debugging
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("... pong (HTTP200)"))
+}
+
 func main() {
 	var (
 		listenAddress = flag.String("web.listen-address", ":9304", "Address to listen on for web interface and telemetry.")
@@ -282,7 +288,7 @@ func main() {
 	}()
 
 	http.Handle(*metricsPath, promhttp.Handler())
-	http.HandleFunc("/-/ping", func(w http.ResponseWriter, r *http.Request) {})
+	http.HandleFunc("/-/ping", servePong)
 
 	log.Println("INFO: Listening on", *listenAddress)
 	log.Println("FATAL:", http.ListenAndServe(*listenAddress, nil))
