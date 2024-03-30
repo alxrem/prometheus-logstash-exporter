@@ -1,3 +1,7 @@
+Since I haven’t used logstash for a very long time, the project has been abandoned.
+
+Use the fork https://github.com/SAP/prometheus-logstash-exporter. Thanks to @LHozzan for continuing to work on the project.
+
 Logstash exporter
 =================
 
